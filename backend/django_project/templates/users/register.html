@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% comment %} <div class='text-light'>
+{{form}}
+</div> {% endcomment %}
+
+<div style='display: flex; align-items: center; flex-direction: column; margin-top: 30px;'>
+  <h5 class='text-light'>РЕГИСТРАЦИЯ </h5>
+  <div style='max-width: 90%;'>
+    {% if form.errors %}
+      <hr style='color: white; margin-bottom: 30px;'>
+      {% for field in form %}
+        {% for error in field.errors %}            
+          <div class="alert alert-danger">
+            {{ error|escape }}
+          </div>
+        {% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ error|escape }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <form method="post" action="{% url 'register' %}" style='width: 270px;'>
+    <hr style='color: white;'>
+    {% csrf_token %}
+    <div class='col text-light'>
+
+      <div style='margin-bottom: 5px;'>{{ form.username.label_tag }}</div>
+      <input
+      class='form-control bg-dark text-light'
+      type="text"
+      name="username"
+      autofocus=""
+      autocapitalize="none"
+      autocomplete="username"
+      maxlength="150"
+      required="True"
+      value="{{ form.username.value|default_if_none:'' }}"
+      id="id_username"
+      >
+
+      <div style='margin-top: 15px; margin-bottom: 5px;'>{{ form.password1.label_tag }}</div>
+      <input
+      class='form-control bg-dark text-light'
+      type="password"
+      name="password1"
+      autocomplete="new-password"
+      aria-invalid="true"
+      aria-describedby="id_password1_helptext"
+      id="id_password1">
+
+      <div style='margin-top: 15px; margin-bottom: 5px;'>{{ form.password2.label_tag }}</div>
+      <input
+      class='form-control bg-dark text-light'
+      type="password"
+      name="password2"
+      autocomplete="new-password"
+      aria-invalid="true"
+      aria-describedby="id_password2_helptext"
+      id="id_password2">
+
+      <input 
+      class='btn btn-primary'
+      id='login-button'
+      style='margin-top: 25px; width: 100%; height: 40px;'
+      type="submit" value="РЕГИСТРАЦИЯ">    
+
+    </div>
+  </form>
+</div>
+
+<script>
+    window.addEventListener('load', function() {
+      turn_off_loader();
+    });
+  </script>
+{% endblock %}

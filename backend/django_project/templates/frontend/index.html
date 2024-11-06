@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<div
+id='null-games'
+class="container d-flex justify-content-center align-items-center d-none"
+style='margin-top: 20px;'>
+    <div class="col-md-4 text-center">
+        <h5 class="font-weight-bold text-secondary">Нет записанных игр</h5>
+    </div>
+</div>
+
+<table
+id='games-table'
+class="table table-dark text-wrap text-light text-center"
+style='margin-top: 20px; table-layout: fixed;'>
+  <colgroup>
+    <col style='width: 20%;'>
+    <col style='width: 35%;'>
+    <col style='width: 30%;'>
+  </colgroup>
+  <thead>
+      <tr>
+        <th>Дата</th>
+        <th>Герой</th>
+        <th>Статус</th>
+      </tr>
+  </thead>
+</table>
+
+
+
+<script>
+  const table = document.getElementById('games-table');
+
+  function full_games_table(games) {
+    for (game of games) {
+      var row = table.insertRow(1);
+      row.style.cursor = 'pointer';
+      href = 'http://' + window.location.host + '/game/' + game.id
+      row.setAttribute("onclick", "location.href='" + href + "'");
+      row.setAttribute("data-id", game.id);
+      var formattedDatetime = format_datetime(game.datetime);
+      row.insertCell(0).innerHTML = formattedDatetime;
+      row.insertCell(1).innerHTML = format_hero_name(game.hero);
+      let result_html = get_result_html_for_table(game.result);
+      row.insertCell(2).innerHTML = result_html;
+    }
+  }
+
+  axios.get('http://' + window.location.host + '/api/v1/games/')
+    .then(response => {
+      console.log(response.data);
+      if (response.data.length === 0) {
+        $('#null-games').removeClass('d-none');
+        $('#games-table').addClass('d-none');
+      } else {
+        full_games_table(response.data);
+      }
+      turn_off_loader();
+    })
+    .catch(error => {
+      console.error(error);
+    })
+
+
+
+  const gamesListSocket = new WebSocket(
+      'ws://'
+      + window.location.host
+      + '/ws/games_list/'
+  );
+
+  gamesListSocket.onmessage = function(e) {
+      data = JSON.parse(e.data)
+      let event_type = data.type
+      let game_id = data.game_pk
+      axios.get('http://' + window.location.host + '/api/v1/games/' + game_id)
+      .then(response => {
+        console.log(response.data);
+        if (event_type == 'new_game_created') {
+          full_games_table([response.data]);
+        } else if (event_type == 'game_change_status') {
+          let row = table.querySelector(`tr[data-id="${game_id}"]`);
+          let result_html = get_result_html_for_table(response.data.result);
+          row.cells[2].innerHTML = result_html;
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      })
+  };
+</script>
+
+{% endblock %}
